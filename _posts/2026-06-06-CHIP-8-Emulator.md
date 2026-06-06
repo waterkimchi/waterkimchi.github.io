@@ -19,7 +19,33 @@ In the late 1970s, microcomputers had tiny amounts of RAM (often just 2KB to 4KB
 
 Joseph Weisbecker wrote a tiny 512-byte interpreter program (a virtual machine) that sat in the computer's memory. This interpreter ran a much simpler, universal language he designed: CHIP-8. Instead of dealing with complex hardware code, hobbyists could write games using CHIP-8's straightforward commands, and the interpreter would translate them on the fly.
 
+Here are the general specs of the CHIP-8:
 
+1. 4,096 bytes (4KB) of addressable RAM, indexed from 0x000 to 0xFFF.
 
-# Hardware
-A CPU is basically a manual book of instructions that trigger when a specific input(could be an instruction sequence, or a user input) is admitted, then outputs the result. In a software perspective, this is easy to replicate via 
+- 0x000 to 0x1FF: Originally reserved for the interpreter itself. In modern emulators, this space is typically empty and used to store font data.
+- 0x200 to 0xFFF: Where the actual game data (ROM) is loaded and executed.
+
+2. 16 general purpose 8-bit registers (V0 through VF).
+
+A register is basically a location on a CPU for storage. All instructions and operations must be done within the resgisters. Since it is 8-bit, that means each register is only able to hold any value from 0x00 to 0xFF. The last register (VF) is a "flag" register used to handle math carries and graphics collisions, basically an error flag.
+
+3. Index 16-bit register (I) to store memory addresses.
+
+4. Program counter (16-bit pointer) that tracks the memory address of the current instruction.
+
+5. Keyboard
+
+The orignially CHIP-8 machine responded to the key map of: 
+1 2 3 C
+4 5 6 D
+7 8 9 E
+A 0 B F
+This layout must be mapped into various other configurations to fit the keyboards of today's platforms.
+
+6. 64x32-pixel monochrome display.
+
+The layout was:
+(0,0)         (63,0)
+
+(0,31)        (63,31)
