@@ -23,8 +23,8 @@ Here are the general specs of the CHIP-8:
 
 1. 4,096 bytes (4KB) of addressable RAM, indexed from 0x000 to 0xFFF.
 
-- 0x000 to 0x1FF: Originally reserved for the interpreter itself. In modern emulators, this space is typically empty and used to store font data.
-- 0x200 to 0xFFF: Where the actual game data (ROM) is loaded and executed.
+0x000 to 0x1FF: Originally reserved for the interpreter itself. In modern emulators, this space is typically empty and used to store font data.
+0x200 to 0xFFF: Where the actual game data (ROM) is loaded and executed.
 
 2. 16 general purpose 8-bit registers (V0 through VF).
 
@@ -34,18 +34,4 @@ A register is basically a location on a CPU for storage. All instructions and op
 
 4. Program counter (16-bit pointer) that tracks the memory address of the current instruction.
 
-5. Keyboard
-
-The orignially CHIP-8 machine responded to the key map of: 
-1 2 3 C
-4 5 6 D
-7 8 9 E
-A 0 B F
-This layout must be mapped into various other configurations to fit the keyboards of today's platforms.
-
-6. 64x32-pixel monochrome display.
-
-The layout was:
-(0,0)         (63,0)
-
-(0,31)        (63,31)
+5. 64x32-pixel monochrome display with the layout: (0,0) (63,0) (0,31) (63,31).
