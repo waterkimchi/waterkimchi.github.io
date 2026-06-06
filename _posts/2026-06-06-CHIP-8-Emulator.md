@@ -14,7 +14,8 @@ If you play a lot of video games, the most common hurdle you will run into is co
 
 This compatibility barrier persisted throughout the growth of the gaming industry, forcing developers to dedicate their software to specific hardware environments. Although the industry has recently moved toward unifying these vast markets, we still cannot natively run the vast legacy of classic software on modern systems. To bridge this gap, developers have leveraged the enhanced processing power of modern general-purpose computers to build software copies of these vintage systems, creating what we know today as the emulator.
 
-# CHIP-8
+# Hardware
+## CHIP-8
 In the late 1970s, microcomputers had tiny amounts of RAM (often just 2KB to 4KB) and slow processors. Writing a game required writing raw assembly language or machine code specific to that computer's exact processor chip. This was incredibly tedious and difficult.  
 
 Joseph Weisbecker wrote a tiny 512-byte interpreter program (a virtual machine) that sat in the computer's memory. This interpreter ran a much simpler, universal language he designed: CHIP-8. Instead of dealing with complex hardware code, hobbyists could write games using CHIP-8's straightforward commands, and the interpreter would translate them on the fly.
@@ -34,4 +35,90 @@ A register is basically a location on a CPU for storage. All instructions and op
 
 4. Program counter (16-bit pointer) that tracks the memory address of the current instruction.
 
-5. 64x32-pixel monochrome display with the layout: (0,0) (63,0) (0,31) (63,31).
+5. Stack
+
+A small, dedicated array (or block of memory) used exclusively to keep track of execution flow during subroutines (function calls). When a program executes a CALL instruction to run a different block of code, it saves the current Program Counter address into this stack. This ensures the CPU knows exactly where to resume once the subroutine is finished.
+
+6. Stack pointer
+
+An 8-bit variable that tracks the current active index of the stack array. When a new return address is added (pushed) to the stack, the stack pointer increments. When an address is removed (popped) during a RETURN instruction, the stack pointer decrements.
+
+7. Delay and Sound timers
+
+These are two independent countdown clocks. If you set them to any number above 0, they will automatically count down at a rate of 60 times per second (60Hz).
+
+8. Input keys
+
+The original CHIP-8 computers used a 16-button hexadecimal keypad, labeled 0 through F. When building an emulator on a modern computer, you usually map these 16 inputs to a cluster of keys on your QWERTY keyboard (for example, mapping them to the 1-4, Q-R, A-F, and Z-V keys).
+
+9. 64x32-pixel monochrome display with the layout: (0,0) (63,0) (0,31) (63,31).
+
+This is the physical game screen. It is a grid exactly 64 pixels wide and 32 pixels tall. Coordinate (0,0) is the very top-left pixel, and (63,31) is the very bottom-right pixel. "Monochrome" simply means there are no colors—a pixel is either completely ON (drawn) or completely OFF (empty).
+
+10. Operation code
+
+This is the raw 16-bit (2-byte) machine instruction (like 00 E0 or D0 14) that tells the CPU what action to take. The entire CPU cycle revolves around fetching an opcode, decoding what it means, and executing it.
+
+## ROM
+Acronym for Read-Only Memory, where the information is permanently burned into a physical microchip at the factory. The CPU can read from it as much as it wants, but it cannot easily write over it or erase it. When the power goes off, the information is perfectly safe.
+
+In a emulator perspective, ROM is an instruction set that utilizes the console device to output a game. Basically the game itself that includes all the instructions, including graphics, sound, movement, memory, and more.
+
+Inside a typical game ROM, there will be the instruction code and the game graphics. The bulk of the ROM is made up of the 16-bit opcodes we talked about earlier. These are the instructions that tell the game what to do. Unlike modern files that have a "header" at the top, CHIP-8 ROMs have absolutely zero metadata. The very first byte of the file is almost always the first half of the first opcode the game wants to run.
+
+On the graphics side of the ROM, the basic 16-bit sprites are encoded into the emulator itself, while the specific game sprites are inside the ROMs. Since the simple system cannot read modern image extentions such as `.png` or `.jpg`, the clever way to create these sprites was to use a 5 byte binary representation of the object. As an example:
+The character `F` will be represented as:
+```
+11110000
+10000000
+11110000
+10000000
+10000000
+```
+Where the numbers 1 represented that the pixel was on.
+
+As a total example of a CHIP-8 game ROM file, it would look something like this:
+```
+ADDRESS |  HEX DATA  |  CATEGORY     |  WHAT IT ACTUALLY MEANS
+---------|------------|---------------|----------------------------------
+         |            |               |
+ $200    |  00 E0     |  [GAME CODE]  |  Clear the screen
+ $202    |  A2 0C     |  [GAME CODE]  |  Set Index to address $20C
+ $204    |  60 1C     |  [GAME CODE]  |  Set X coordinate to 28
+ $206    |  61 0E     |  [GAME CODE]  |  Set Y coordinate to 14
+ $208    |  D0 14     |  [GAME CODE]  |  Draw 4 lines of graphics
+ $20A    |  12 0A     |  [GAME CODE]  |  Loop forever (freeze)
+         |            |               |
+---------|------------|---------------|----------------------------------
+         |            |               |
+ $20C    |  F0        |  [GRAPHICS]   |  ████
+ $20D    |  90        |  [GRAPHICS]   |  █  █
+ $20E    |  90        |  [GRAPHICS]   |  █  █
+ $20F    |  F0        |  [GRAPHICS]   |  ████
+         |            |               |
+```
+
+# Development
+
+Well reading from the CHIP-8 hardware description, wouldn't this be the perfect example for a object-oriented programming experience? That is exactly what we are going to do.
+
+Our components can orient around the single object CHIP-8:
+```cpp
+#include <cstdint>
+
+class CHIP_8 {
+  public:
+  	uint8_t registers[16]{};     // 16 8-bit registers
+  	uint8_t memory[4096]{};      // 4kb memory
+  	uint16_t index{};            // index register 16-bit
+  	uint16_t pc{};               // program counter 16-bit
+  	uint16_t stack[16]{};        // 16-level stack
+  	uint8_t sp{};                // 8-bit stack pointer
+  	uint8_t delayTimer{};        // 8-bit delay timer
+  	uint8_t soundTimer{};        // 8-bit sound timer
+  	uint8_t keypad[16]{};        // 16 input keys
+  	uint32_t video[64 * 32]{};   // monochrome display memory(32-bit for SDL implementation)
+  	uint16_t opcode;             // operation code of the current call
+};
+```
+We will start our developemnt with this basis. 
