@@ -100,13 +100,14 @@ ADDRESS |  HEX DATA  |  CATEGORY     |  WHAT IT ACTUALLY MEANS
 
 # Development
 
+### OOP Structure
 Well reading from the CHIP-8 hardware description, wouldn't this be the perfect example for a object-oriented programming experience? That is exactly what we are going to do.
 
 Our components can orient around the single object CHIP-8:
 ```cpp
 #include <cstdint>
 
-class CHIP_8 {
+class Chip8 {
   public:
   	uint8_t registers[16]{};     // 16 8-bit registers
   	uint8_t memory[4096]{};      // 4kb memory
@@ -122,3 +123,62 @@ class CHIP_8 {
 };
 ```
 We will start our developemnt with this basis. 
+
+### Font Sets
+Explained on the graphics side of the hardware, we can initialize the 16 sprites for basic languages (0~9, A~F).
+We will include these as a 8-bit to 80 long array such as:
+
+```cpp
+const unsigned int FONTSET_SIZE = 80;
+
+uint8_t fontset[FONTSET_SIZE] = {
+	0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+	0x20, 0x60, 0x20, 0x20, 0x70, // 1
+	0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+	0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+	0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+	0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+	0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+	0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+	0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+	0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+	0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+	0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+	0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+	0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+};
+```
+The hardware will have the fontset loaded into the memory starting at 0x50, so we add that as well:
+```cpp
+const unsigned int FONTSET_START_ADDRESS = 0x50;
+Chip8::Chip8() {
+...
+         for (int i = 0; i < FONTSET_SIZE; ++i) {
+                  memory[FONTSET_START_ADDRESS + i] = fontset[i];
+         }
+}
+```
+
+### Loading a ROM
+To load the instructions sets on a ROM, we must have the following:
+- Get the size of the ROM
+- Read the file
+- Transfer the file contents to CHIP-8 memory (starting at 0x200)
+- Put the program counter at the starting address (0x200)
+
+Since we only need to read, we will use a standard ifstream to read the file. Of course the file should be read in binary, and since we want to get the size, we will move the file pointer to the end.
+This will look something like:
+
+```cpp
+#include <fstream>
+
+bool Chip8::load(const char *file_path) {
+         std::ifstream file(file_path, std::ios::binary)
+
+         if(!file) {
+                  std::cerr << "Failed to open ROM" << std::endl;
+                  return false;
+         }
+         
+}
+```
