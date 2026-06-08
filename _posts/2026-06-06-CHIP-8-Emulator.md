@@ -100,13 +100,14 @@ ADDRESS |  HEX DATA  |  CATEGORY     |  WHAT IT ACTUALLY MEANS
 
 # Development
 
+### OOP Structure
 Well reading from the CHIP-8 hardware description, wouldn't this be the perfect example for a object-oriented programming experience? That is exactly what we are going to do.
 
 Our components can orient around the single object CHIP-8:
 ```cpp
 #include <cstdint>
 
-class CHIP_8 {
+class Chip8 {
   public:
   	uint8_t registers[16]{};     // 16 8-bit registers
   	uint8_t memory[4096]{};      // 4kb memory
@@ -122,3 +123,28 @@ class CHIP_8 {
 };
 ```
 We will start our developemnt with this basis. 
+
+### Loading a ROM
+To load the instructions sets on a ROM, we must have the following:
+- Get the size of the ROM
+- Read the file
+- Transfer the file contents to CHIP-8 memory (starting at 0x200)
+- Put the program counter at the starting address (0x200)
+
+Since we only need to read, we will use a standard ifstream to read the file. Of course the file should be read in binary, and since we want to get the size, we will move the file pointer to the end.
+This will look something like:
+
+```cpp
+#include <fstream>
+
+bool Chip8::load(const char *file_path) {
+         std::ifstream file(file_path, std::ios::binary)
+
+         if(!file) {
+                  std::cerr << "Failed to open ROM" << std::endl;
+                  return false;
+         }
+
+
+}
+```
